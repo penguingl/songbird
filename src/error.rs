@@ -1,7 +1,7 @@
 //! Driver and gateway error handling.
 
 #[cfg(feature = "serenity")]
-use futures::channel::mpsc::TrySendError;
+use futures::channel::mpsc::TryChannelError;
 #[cfg(not(feature = "simd-json"))]
 pub use serde_json::Error as JsonError;
 #[cfg(feature = "serenity")]
@@ -11,7 +11,7 @@ pub use simd_json::Error as JsonError;
 #[cfg(feature = "gateway")]
 use std::{error::Error, fmt};
 #[cfg(feature = "twilight")]
-use twilight_gateway::error::SendError;
+use twilight_gateway::error::ChannelError;
 
 #[cfg(feature = "gateway")]
 #[derive(Debug)]
@@ -48,10 +48,10 @@ pub enum JoinError {
     Driver(ConnectionError),
     #[cfg(feature = "serenity")]
     /// Serenity-specific WebSocket send error.
-    Serenity(Box<TrySendError<ShardRunnerMessage>>),
+    Serenity(Box<TryChannelError<ShardRunnerMessage>>),
     #[cfg(feature = "twilight")]
     /// Twilight-specific WebSocket send error when a message fails to send over websocket.
-    Twilight(SendError),
+    Twilight(ChannelError),
 }
 
 #[cfg(feature = "gateway")]
@@ -117,15 +117,15 @@ impl Error for JoinError {
 }
 
 #[cfg(all(feature = "serenity", feature = "gateway"))]
-impl From<Box<TrySendError<ShardRunnerMessage>>> for JoinError {
-    fn from(e: Box<TrySendError<ShardRunnerMessage>>) -> Self {
+impl From<Box<TryChannelError<ShardRunnerMessage>>> for JoinError {
+    fn from(e: Box<TryChannelError<ShardRunnerMessage>>) -> Self {
         JoinError::Serenity(e)
     }
 }
 
 #[cfg(all(feature = "twilight", feature = "gateway"))]
-impl From<SendError> for JoinError {
-    fn from(e: SendError) -> Self {
+impl From<ChannelError> for JoinError {
+    fn from(e: ChannelError) -> Self {
         JoinError::Twilight(e)
     }
 }
